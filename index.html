@@ -9,7 +9,6 @@
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
     crossorigin=""
   />
 
@@ -20,12 +19,36 @@
   </style>
 </head>
 <body>
+  <div style="margin: 0 auto 0 auto; max-width: 700px; background: #f3f3f3; border-radius: 18px; padding: 12px 18px 10px 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); display: flex; align-items: center; gap: 16px;">
+    <img src="cencorse.png" alt="CBNC" style="height:38px; width:auto; border-radius:8px; margin-right:10px; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.07);">
+    <div style="flex:1;">
+      <span id="titre-principal" style="display:block; text-align:left; font-family:system-ui,sans-serif; font-size:0.98em; font-weight:bold; margin: 0; letter-spacing:0.01em; color:#222;">
+        Répartition de la Flore des Serpentinites (espèces PNA) en Haute-Corse <span id="titre-source" style="font-size:0.85em; color:#444; font-weight:normal;">(2024, Source : © CBNC)</span>
+      </span>
+    </div>
+  </div>
+  <button id="legend-toggle" style="position: fixed; top: 80px; right: 3vw; left: auto; transform: none; z-index: 1001; padding: 6px 12px 6px 10px; font-size: 0.92em; border-radius: 10px; background: linear-gradient(90deg, #2c3e50 0%, #6c7a89 100%); color: #fff; border: none; box-shadow: 0 2px 8px rgba(44,62,80,0.08); cursor: pointer; font-weight: bold; letter-spacing: 1px; transition: background 0.2s, box-shadow 0.2s; display: flex; align-items: center; gap: 8px; height: auto; width: auto; min-width: 60px; min-height: 0; opacity:0.92;">
+    Légende
+    <span id="legend-arrow" style="display:inline-block; transition: transform 0.2s; font-size:1em;">&#9660;</span>
+  </button>
+  <style>
+    @media (max-width: 600px) {
+      #legend-toggle {
+        top: 98px !important;
+        right: 2vw !important;
+        padding: 6px 10px 6px 8px !important;
+        font-size: 0.82em !important;
+        border-radius: 8px !important;
+        min-width: 54px !important;
+      }
+    }
+  </style>
+  <div id="legend-box" style="display:none; position: fixed; top: 65px; left: 50%; transform: translateX(-50%); background: white; border: 2px solid #4f8cff; border-radius: 16px; padding: 16px 18px; z-index: 1001; max-height: 60vh; overflow-y: auto; min-width: 180px; box-shadow: 0 4px 24px rgba(79,140,255,0.13); font-family: system-ui, sans-serif; font-size: 0.92em;"></div>
   <div id="map"></div>
 
   <!-- Leaflet JS -->
   <script
     src="https://unpkg.com/leaflet/dist/leaflet.js"
-    integrity="sha256-gZ5rZwTik7x3Jd2S7GAT1eAqV4H0ao4XCIpZKQ+4G0k="
     crossorigin=""
   ></script>
 
@@ -45,11 +68,32 @@
     fetch('QR_serpentinites_2024.geojson')
       .then(r => r.json())
       .then(geojson => {
-        // Style de base adaptable selon la géométrie
+        // Génère une couleur unique pour chaque espèce (nom_reconn)
+        const couleurs = {};
+        let colorIdx = 0;
+        const palette = [
+          '#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00',
+          '#ffff33', '#a65628', '#f781bf', '#999999', '#1b9e77',
+          '#d95f02', '#7570b3', '#e7298a', '#66a61e', '#e6ab02',
+          '#a6761d', '#666666'
+        ];
+        // Récupère toutes les espèces uniques
+        geojson.features.forEach(f => {
+          const espece = f.properties.nom_reconn;
+          if (espece && !(espece in couleurs)) {
+            couleurs[espece] = palette[colorIdx % palette.length];
+            colorIdx++;
+          }
+        });
+        // Style dynamique selon l'espèce
         const layer = L.geoJSON(geojson, {
           pointToLayer: (feature, latlng) =>
-            L.circleMarker(latlng, { radius: 6, weight: 1 }),
-          style: (feature) => ({ weight: 2 }),
+            L.circleMarker(latlng, { radius: 8, weight: 2 }),
+          style: (feature) => {
+            const espece = feature.properties.nom_reconn;
+            const couleur = couleurs[espece] || '#999999';
+            return { color: couleur, fillColor: couleur, weight: 2, fillOpacity: 0.7 };
+          },
           onEachFeature: (feature, lyr) => {
             // Popup auto avec tous les attributs
             const props = feature.properties || {};
@@ -60,6 +104,9 @@
               }
             }
             lyr.bindPopup(html);
+            // Amélioration mobile : ouverture du popup aussi sur touchstart
+            lyr.on('click', function(e) { this.openPopup(); });
+            lyr.on('touchstart', function(e) { this.openPopup(); });
           }
         }).addTo(map);
 
@@ -69,6 +116,33 @@
         } catch(e) {
           // Si c’est un seul point ou data vide, on ignore
           console.warn('Impossible de calculer les bounds :', e);
+        }
+        // Génération de la légende APRÈS chargement du geojson et définition des couleurs
+        const legendBox = document.getElementById('legend-box');
+        const legendToggle = document.getElementById('legend-toggle');
+        if (legendBox && legendToggle) {
+          legendToggle.onclick = function(e) {
+            e.stopPropagation();
+            const isOpen = legendBox.style.display === 'block';
+            legendBox.style.display = isOpen ? 'none' : 'block';
+            document.getElementById('legend-arrow').style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+          };
+          document.addEventListener('click', function(e) {
+            if (!legendBox.contains(e.target) && e.target !== legendToggle && e.target.parentNode !== legendToggle) {
+              legendBox.style.display = 'none';
+              document.getElementById('legend-arrow').style.transform = 'rotate(0deg)';
+            }
+          });
+          // Remplir la légende avec les espèces et couleurs
+          let legendHtml = '<b style="font-size:1.08em;">Légende</b><br/><div style="height:14px;"></div>';
+          Object.entries(couleurs).forEach(([espece, couleur]) => {
+            // On ne garde que le nom avant la virgule, en italique
+            let nomCourt = espece ? espece.split(',')[0] : '';
+            legendHtml += `<div style='display:flex;align-items:center;margin-bottom:7px;'>` +
+              `<span style='display:inline-block;width:18px;height:18px;background:${couleur};border-radius:50%;margin-right:10px;border:2px solid #4f8cff;'></span>` +
+              `<span style='font-size:1em;font-style:italic;'>${nomCourt}</span></div>`;
+          });
+          legendBox.innerHTML = legendHtml;
         }
       })
       .catch(err => {
