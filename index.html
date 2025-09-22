@@ -103,4 +103,92 @@
     // 1) Crée la carte
     const map = L.map('map', {
       zoomControl: true
-    }).setView([46.5, 2.5], 6); // France par dé
+    }).setView([46.5, 2.5], 6); // France par défaut
+
+    // 2) Fond de carte (gratuit : OpenStreetMap)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 20,
+      attribution: '© OpenStreetMap contributeurs'
+    }).addTo(map);
+
+    // 3) Charger ton GeoJSON
+    fetch('QR_serpentinites_2024.geojson')
+      .then(r => r.json())
+      .then(geojson => {
+        const couleurs = {};
+        let colorIdx = 0;
+        const palette = [
+          '#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00',
+          '#ffff33', '#a65628', '#f781bf', '#999999', '#1b9e77',
+          '#d95f02', '#7570b3', '#e7298a', '#66a61e', '#e6ab02',
+          '#a6761d', '#666666'
+        ];
+        geojson.features.forEach(f => {
+          const espece = f.properties.nom_reconn;
+          if (espece && !(espece in couleurs)) {
+            couleurs[espece] = palette[colorIdx % palette.length];
+            colorIdx++;
+          }
+        });
+        const layer = L.geoJSON(geojson, {
+          pointToLayer: (feature, latlng) =>
+            L.circleMarker(latlng, { radius: 8, weight: 2 }),
+          style: (feature) => {
+            const espece = feature.properties.nom_reconn;
+            const couleur = couleurs[espece] || '#999999';
+            return { color: couleur, fillColor: couleur, weight: 2, fillOpacity: 0.7 };
+          },
+          onEachFeature: (feature, lyr) => {
+            const props = feature.properties || {};
+            let html = '<b>Informations</b><br/>';
+            for (const k in props) {
+              if (props[k] !== null && props[k] !== '') {
+                html += `<b>${k}</b>: ${props[k]}<br/>`;
+              }
+            }
+            lyr.bindPopup(html);
+            lyr.on('click', function(e) { this.openPopup(); });
+            lyr.on('touchstart', function(e) { this.openPopup(); });
+          }
+        }).addTo(map);
+
+        try {
+          map.fitBounds(layer.getBounds(), { padding: [20, 20] });
+        } catch(e) { console.warn('Impossible de calculer les bounds :', e); }
+
+        // Légende
+        const legendBox = document.getElementById('legend-box');
+        const legendToggle = document.getElementById('legend-toggle');
+        if (legendBox && legendToggle) {
+          legendToggle.onclick = function(e) {
+            e.stopPropagation();
+            const isOpen = legendBox.style.display === 'block';
+            legendBox.style.display = isOpen ? 'none' : 'block';
+            document.getElementById('legend-arrow').style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+          };
+          document.addEventListener('click', function(e) {
+            if (!legendBox.contains(e.target) && e.target !== legendToggle && e.target.parentNode !== legendToggle) {
+              legendBox.style.display = 'none';
+              document.getElementById('legend-arrow').style.transform = 'rotate(0deg)';
+            }
+          });
+          let legendHtml = '<b style="font-size:1.08em;">Légende</b><br/><div style="height:10px;"></div>';
+          Object.entries(couleurs).forEach(([espece, couleur]) => {
+            let nomCourt = espece ? espece.split(',')[0] : '';
+            legendHtml += `<div style='display:flex;align-items:center;margin-bottom:6px;'>` +
+              `<span style='display:inline-block;width:16px;height:16px;background:${couleur};border-radius:50%;margin-right:8px;border:2px solid #4f8cff;'></span>` +
+              `<span style='font-size:0.95em;font-style:italic;'>${nomCourt}</span></div>`;
+          });
+          legendBox.innerHTML = legendHtml;
+        }
+      })
+      .catch(err => {
+        alert("Impossible de charger 'QR_serpentinites_2024.geojson'. Vérifie le chemin et l'hébergement.");
+        console.error(err);
+      });
+
+    // Optionnel : échelle
+    L.control.scale({ metric: true, imperial: false }).addTo(map);
+  </script>
+</body>
+</html>
