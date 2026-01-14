@@ -471,53 +471,109 @@
     /* === RESPONSIVE === */
     @media (max-width: 768px) {
       .header-content {
-        padding: 10px 16px;
+        padding: 10px 12px;
+        gap: 12px;
       }
 
       .header-logo {
-        height: 36px;
+        height: 32px;
       }
 
       .header-title {
-        font-size: 1em;
+        font-size: 0.95em;
       }
 
       .header-meta {
-        font-size: 0.75em;
+        font-size: 0.7em;
+        gap: 8px;
       }
 
       #map {
-        top: 64px;
+        top: 60px;
       }
 
       .controls-panel {
-        top: 76px;
-        right: 10px;
+        top: 70px;
+        right: 8px;
       }
 
       .control-btn {
-        padding: 8px 12px;
-        font-size: 0.82em;
+        padding: 6px 10px;
+        font-size: 0.78em;
+        border-radius: 6px;
+      }
+
+      .control-icon {
+        font-size: 0.95em;
       }
 
       #stats-bar {
-        bottom: 16px;
-        padding: 8px 14px;
-        gap: 14px;
-        font-size: 0.78em;
-        flex-wrap: wrap;
-        justify-content: center;
-        max-width: calc(100% - 32px);
+        bottom: 12px;
+        padding: 8px 12px;
+        gap: 8px;
+        font-size: 0.72em;
+        flex-wrap: nowrap;
+        max-width: calc(100% - 20px);
+        border-radius: 10px;
+      }
+
+      .stat-item {
+        gap: 4px;
+      }
+
+      .stat-value {
+        font-size: 1em;
+      }
+
+      .stat-divider {
+        height: 18px;
+        margin: 0 2px;
       }
 
       .dropdown-panel {
-        min-width: 200px;
-        max-width: calc(100vw - 40px);
+        min-width: 180px;
+        max-width: calc(100vw - 24px);
+        right: 0;
       }
 
       .loading-title {
         font-size: 1.4em;
         padding: 0 20px;
+      }
+    }
+
+    /* Extra small screens */
+    @media (max-width: 400px) {
+      .header-content {
+        padding: 8px 10px;
+        gap: 10px;
+      }
+
+      .header-logo {
+        height: 28px;
+      }
+
+      .header-title {
+        font-size: 0.85em;
+      }
+
+      .header-meta {
+        font-size: 0.65em;
+      }
+
+      #stats-bar {
+        padding: 6px 10px;
+        gap: 6px;
+        font-size: 0.68em;
+      }
+
+      .stat-divider {
+        height: 14px;
+      }
+
+      .control-btn {
+        padding: 5px 8px;
+        font-size: 0.72em;
       }
     }
   </style>
