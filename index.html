@@ -2,31 +2,30 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <title>Flore des Serpentinites | CBNC</title>
+  <title>Flore des Serpentinites – Haute-Corse | CBNC</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Carte de répartition de la flore des serpentinites en Haute-Corse - Conservatoire Botanique National de Corse">
+  <meta name="description" content="Carte interactive de répartition de la flore des serpentinites en Haute-Corse - Conservatoire Botanique National de Corse">
 
-  <!-- Google Fonts - Police scientifique -->
+  <!-- Google Fonts - Scientific typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 
   <style>
     :root {
-      --primary: #1a5f4a;
-      --primary-dark: #0d3d30;
-      --primary-light: #2d8a6e;
-      --accent: #c7a84c;
-      --bg-dark: #1a1f2e;
-      --bg-card: #ffffff;
-      --text-dark: #1a1f2e;
-      --text-light: #f8f9fa;
-      --border-subtle: rgba(26, 95, 74, 0.15);
-      --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.08);
-      --shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.12);
+      --primary: #1a3a52;
+      --primary-light: #2d5a7b;
+      --accent: #c9a227;
+      --text: #2c3e50;
+      --text-light: #5a6c7d;
+      --bg: #f8f9fa;
+      --bg-panel: #ffffff;
+      --border: #d1d9e0;
+      --success: #27ae60;
+      --shadow: rgba(26, 58, 82, 0.12);
     }
 
     * {
@@ -37,20 +36,24 @@
       height: 100%;
       margin: 0;
       font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: var(--bg-dark);
+      background: var(--bg);
+      color: var(--text);
     }
 
-    /* ===== LOADING SCREEN ===== */
+    /* === LOADING SCREEN === */
     #loading-screen {
       position: fixed;
-      inset: 0;
-      background: linear-gradient(135deg, var(--bg-dark) 0%, #2a3142 50%, var(--primary-dark) 100%);
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       z-index: 9999;
-      transition: opacity 0.6s ease, visibility 0.6s ease;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
     }
 
     #loading-screen.hidden {
@@ -60,69 +63,56 @@
 
     .loading-content {
       text-align: center;
-      color: var(--text-light);
-    }
-
-    .loading-logo {
-      width: 80px;
-      height: 80px;
-      border-radius: 16px;
-      margin-bottom: 24px;
-      box-shadow: var(--shadow-medium);
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.05); opacity: 0.9; }
+      color: white;
     }
 
     .loading-title {
-      font-size: 1.5rem;
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 1.8em;
       font-weight: 600;
       margin-bottom: 8px;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.02em;
     }
 
     .loading-subtitle {
-      font-size: 0.95rem;
-      color: rgba(255, 255, 255, 0.7);
-      margin-bottom: 32px;
+      font-size: 1em;
+      opacity: 0.85;
+      margin-bottom: 40px;
+      font-weight: 300;
     }
 
-    .progress-container {
+    .loading-bar-container {
       width: 280px;
       height: 4px;
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: 4px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 2px;
       overflow: hidden;
       margin-bottom: 16px;
     }
 
-    .progress-bar {
+    .loading-bar {
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, var(--primary-light), var(--accent));
-      border-radius: 4px;
+      background: var(--accent);
+      border-radius: 2px;
       transition: width 0.3s ease;
     }
 
     .loading-status {
-      font-size: 0.85rem;
-      color: rgba(255, 255, 255, 0.6);
-      font-family: 'Fira Code', monospace;
+      font-size: 0.85em;
+      opacity: 0.7;
     }
 
-    /* ===== HEADER ===== */
+    /* === HEADER === */
     #header {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
       z-index: 1000;
-      background: var(--bg-card);
-      border-bottom: 1px solid var(--border-subtle);
-      box-shadow: var(--shadow-soft);
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 2px 12px var(--shadow);
     }
 
     .header-content {
@@ -134,328 +124,256 @@
       gap: 20px;
     }
 
-    .logo-section {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .logo-img {
-      height: 48px;
+    .header-logo {
+      height: 44px;
       width: auto;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 6px;
+      background: white;
+      padding: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
     }
 
-    .title-block {
+    .header-text {
       flex: 1;
     }
 
-    .main-title {
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: var(--text-dark);
-      margin: 0;
+    .header-title {
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 1.15em;
+      font-weight: 600;
+      color: var(--primary);
+      margin: 0 0 2px 0;
       line-height: 1.3;
     }
 
-    .subtitle {
-      font-size: 0.82rem;
-      color: #666;
-      margin: 2px 0 0 0;
-      font-weight: 400;
-    }
-
-    .subtitle strong {
-      color: var(--primary);
-      font-weight: 600;
-    }
-
-    /* ===== CONTROLS ===== */
-    .controls {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .control-btn {
-      padding: 8px 14px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-family: inherit;
-    }
-
-    .control-btn.primary {
-      background: var(--primary);
-      color: white;
-    }
-
-    .control-btn.primary:hover {
-      background: var(--primary-dark);
-      transform: translateY(-1px);
-    }
-
-    .control-btn.secondary {
-      background: #f1f3f4;
-      color: var(--text-dark);
-    }
-
-    .control-btn.secondary:hover {
-      background: #e4e6e7;
-    }
-
-    .control-icon {
-      font-size: 1rem;
-    }
-
-    /* ===== BASEMAP SELECTOR ===== */
-    #basemap-dropdown {
-      position: relative;
-    }
-
-    .basemap-menu {
-      position: absolute;
-      top: calc(100% + 8px);
-      right: 0;
-      background: var(--bg-card);
-      border-radius: 12px;
-      box-shadow: var(--shadow-medium);
-      border: 1px solid var(--border-subtle);
-      min-width: 200px;
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(-10px);
-      transition: all 0.2s ease;
-      z-index: 1002;
-    }
-
-    .basemap-menu.active {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
-    }
-
-    .basemap-menu-title {
-      padding: 12px 16px 8px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: #888;
-      border-bottom: 1px solid var(--border-subtle);
-    }
-
-    .basemap-option {
-      padding: 12px 16px;
-      cursor: pointer;
+    .header-meta {
+      font-size: 0.82em;
+      color: var(--text-light);
       display: flex;
       align-items: center;
       gap: 12px;
-      transition: background 0.15s ease;
+      flex-wrap: wrap;
     }
 
-    .basemap-option:hover {
-      background: #f8f9fa;
-    }
-
-    .basemap-option.active {
-      background: rgba(26, 95, 74, 0.08);
-    }
-
-    .basemap-option:last-child {
-      border-radius: 0 0 12px 12px;
-    }
-
-    .basemap-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 6px;
+    .header-meta span {
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 1rem;
+      gap: 4px;
     }
 
-    .basemap-icon.osm { background: #e8f5e9; }
-    .basemap-icon.topo { background: #fff3e0; }
-    .basemap-icon.sat { background: #e3f2fd; }
-    .basemap-icon.dark { background: #37474f; color: white; }
-
-    .basemap-label {
-      font-size: 0.9rem;
-      font-weight: 500;
-      color: var(--text-dark);
-    }
-
-    .basemap-check {
-      margin-left: auto;
-      color: var(--primary);
-      opacity: 0;
-      transition: opacity 0.15s ease;
-    }
-
-    .basemap-option.active .basemap-check {
-      opacity: 1;
-    }
-
-    /* ===== LEGEND PANEL ===== */
-    #legend-panel {
-      position: fixed;
-      top: 88px;
-      right: 20px;
-      width: 280px;
-      max-height: calc(100vh - 120px);
-      background: var(--bg-card);
-      border-radius: 12px;
-      box-shadow: var(--shadow-medium);
-      border: 1px solid var(--border-subtle);
-      z-index: 1001;
-      opacity: 0;
-      visibility: hidden;
-      transform: translateX(20px);
-      transition: all 0.3s ease;
-      overflow: hidden;
-    }
-
-    #legend-panel.active {
-      opacity: 1;
-      visibility: visible;
-      transform: translateX(0);
-    }
-
-    .legend-header {
-      padding: 16px 18px;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    .header-badge {
+      background: var(--primary);
       color: white;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75em;
+      font-weight: 600;
+      letter-spacing: 0.03em;
     }
 
-    .legend-title {
-      font-size: 1rem;
-      font-weight: 600;
-      margin: 0;
+    /* === MAP === */
+    #map {
+      position: fixed;
+      top: 72px;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
+
+    /* === CONTROLS PANEL === */
+    .controls-panel {
+      position: fixed;
+      top: 84px;
+      right: 16px;
+      z-index: 1001;
       display: flex;
-      align-items: center;
+      flex-direction: column;
       gap: 8px;
     }
 
-    .legend-count {
-      font-size: 0.78rem;
-      opacity: 0.8;
-      margin-top: 4px;
+    .control-btn {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.88em;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 8px var(--shadow);
+      transition: all 0.2s ease;
+      font-family: inherit;
     }
 
-    .legend-content {
-      padding: 16px 18px;
-      max-height: calc(100vh - 220px);
+    .control-btn:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .control-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .control-icon {
+      font-size: 1.1em;
+    }
+
+    .control-arrow {
+      margin-left: auto;
+      font-size: 0.7em;
+      transition: transform 0.2s ease;
+    }
+
+    .control-btn.active .control-arrow {
+      transform: rotate(180deg);
+    }
+
+    /* === DROPDOWN PANELS === */
+    .dropdown-panel {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 4px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 4px 20px var(--shadow);
+      min-width: 220px;
+      max-height: 400px;
       overflow-y: auto;
+      display: none;
+      animation: slideDown 0.2s ease;
+    }
+
+    .dropdown-panel.show {
+      display: block;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .dropdown-header {
+      padding: 12px 16px 8px;
+      font-size: 0.75em;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-light);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .dropdown-item {
+      padding: 10px 16px;
+      font-size: 0.9em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background 0.15s ease;
+    }
+
+    .dropdown-item:hover {
+      background: var(--bg);
+    }
+
+    .dropdown-item.selected {
+      background: rgba(26, 58, 82, 0.08);
+      color: var(--primary);
+      font-weight: 500;
+    }
+
+    .dropdown-item .check {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7em;
+      color: transparent;
+      transition: all 0.15s ease;
+    }
+
+    .dropdown-item.selected .check {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    /* === LEGEND PANEL === */
+    #legend-panel {
+      min-width: 260px;
+      max-width: 320px;
     }
 
     .legend-item {
+      padding: 8px 16px;
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 8px 0;
-      border-bottom: 1px solid #f0f0f0;
+      font-size: 0.88em;
+      border-bottom: 1px solid rgba(0,0,0,0.04);
     }
 
     .legend-item:last-child {
       border-bottom: none;
     }
 
-    .legend-marker {
+    .legend-color {
       width: 16px;
       height: 16px;
       border-radius: 50%;
       flex-shrink: 0;
-      border: 2px solid rgba(255, 255, 255, 0.8);
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+      border: 2px solid rgba(255,255,255,0.8);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     }
 
-    .legend-species {
-      font-size: 0.88rem;
+    .legend-name {
       font-style: italic;
-      color: var(--text-dark);
+      color: var(--text);
       line-height: 1.3;
     }
 
-    /* ===== MAP ===== */
-    #map {
-      position: fixed;
-      top: 73px;
-      left: 0;
-      right: 0;
-      bottom: 0;
+    .legend-count {
+      margin-left: auto;
+      font-size: 0.8em;
+      color: var(--text-light);
+      background: var(--bg);
+      padding: 2px 8px;
+      border-radius: 10px;
     }
 
-    /* Leaflet popup styling */
-    .leaflet-popup-content-wrapper {
-      border-radius: 12px;
-      box-shadow: var(--shadow-medium);
-    }
-
-    .leaflet-popup-content {
-      font-family: 'Source Sans 3', sans-serif;
-      font-size: 0.9rem;
-      line-height: 1.5;
-      margin: 14px 16px;
-    }
-
-    .popup-title {
-      font-weight: 700;
-      font-size: 1rem;
-      color: var(--primary-dark);
-      margin-bottom: 10px;
-      padding-bottom: 8px;
-      border-bottom: 2px solid var(--border-subtle);
-      font-style: italic;
-    }
-
-    .popup-row {
-      display: flex;
-      gap: 8px;
-      margin: 6px 0;
-    }
-
-    .popup-label {
-      font-weight: 600;
-      color: #555;
-      min-width: 90px;
-    }
-
-    .popup-value {
-      color: var(--text-dark);
-    }
-
-    /* Scale control styling */
-    .leaflet-control-scale-line {
-      border-color: var(--primary) !important;
-      background: rgba(255, 255, 255, 0.9) !important;
-      font-family: 'Fira Code', monospace;
-      font-size: 0.75rem;
-    }
-
-    /* ===== STATS BAR ===== */
+    /* === STATS BAR === */
     #stats-bar {
       position: fixed;
-      bottom: 20px;
-      left: 20px;
-      background: var(--bg-card);
-      padding: 10px 18px;
-      border-radius: 10px;
-      box-shadow: var(--shadow-soft);
-      font-size: 0.82rem;
-      color: var(--text-dark);
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 20px;
       display: flex;
-      gap: 20px;
-      z-index: 1000;
-      font-family: 'Fira Code', monospace;
+      align-items: center;
+      gap: 24px;
+      box-shadow: 0 4px 20px var(--shadow);
+      z-index: 1001;
+      font-size: 0.85em;
     }
 
     .stat-item {
@@ -465,152 +383,246 @@
     }
 
     .stat-value {
-      font-weight: 600;
+      font-weight: 700;
       color: var(--primary);
+      font-size: 1.1em;
     }
 
-    /* ===== RESPONSIVE ===== */
+    .stat-label {
+      color: var(--text-light);
+    }
+
+    .stat-divider {
+      width: 1px;
+      height: 24px;
+      background: var(--border);
+    }
+
+    /* === POPUP STYLING === */
+    .leaflet-popup-content-wrapper {
+      border-radius: 10px;
+      box-shadow: 0 4px 20px var(--shadow);
+    }
+
+    .leaflet-popup-content {
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 0.9em;
+      line-height: 1.5;
+      margin: 14px 16px;
+    }
+
+    .popup-title {
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 1.1em;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--accent);
+    }
+
+    .popup-row {
+      display: flex;
+      margin-bottom: 6px;
+    }
+
+    .popup-label {
+      font-weight: 600;
+      color: var(--text-light);
+      min-width: 90px;
+      font-size: 0.85em;
+    }
+
+    .popup-value {
+      color: var(--text);
+    }
+
+    .popup-value.italic {
+      font-style: italic;
+    }
+
+    /* === LEAFLET OVERRIDES === */
+    .leaflet-control-zoom {
+      border: none !important;
+      box-shadow: 0 2px 12px var(--shadow) !important;
+    }
+
+    .leaflet-control-zoom a {
+      background: var(--bg-panel) !important;
+      color: var(--text) !important;
+      border: none !important;
+      width: 36px !important;
+      height: 36px !important;
+      line-height: 36px !important;
+      font-size: 18px !important;
+    }
+
+    .leaflet-control-zoom a:hover {
+      background: var(--primary) !important;
+      color: white !important;
+    }
+
+    .leaflet-control-scale-line {
+      border-color: var(--primary) !important;
+      background: rgba(255,255,255,0.85) !important;
+      font-family: 'Source Sans 3', sans-serif !important;
+    }
+
+    /* === RESPONSIVE === */
     @media (max-width: 768px) {
       .header-content {
         padding: 10px 16px;
-        gap: 12px;
       }
 
-      .logo-img {
-        height: 40px;
+      .header-logo {
+        height: 36px;
       }
 
-      .main-title {
-        font-size: 0.95rem;
+      .header-title {
+        font-size: 1em;
       }
 
-      .subtitle {
-        font-size: 0.75rem;
+      .header-meta {
+        font-size: 0.75em;
       }
 
-      .control-btn span:not(.control-icon) {
-        display: none;
+      #map {
+        top: 64px;
+      }
+
+      .controls-panel {
+        top: 76px;
+        right: 10px;
       }
 
       .control-btn {
-        padding: 8px 10px;
-      }
-
-      #legend-panel {
-        width: calc(100vw - 40px);
-        right: 20px;
-        left: 20px;
+        padding: 8px 12px;
+        font-size: 0.82em;
       }
 
       #stats-bar {
-        left: 10px;
-        right: 10px;
-        bottom: 10px;
-        font-size: 0.75rem;
-        gap: 12px;
+        bottom: 16px;
+        padding: 8px 14px;
+        gap: 14px;
+        font-size: 0.78em;
+        flex-wrap: wrap;
         justify-content: center;
-      }
-    }
-
-    @media (max-width: 500px) {
-      .title-block {
-        display: none;
+        max-width: calc(100% - 32px);
       }
 
-      .header-content {
-        justify-content: space-between;
+      .dropdown-panel {
+        min-width: 200px;
+        max-width: calc(100vw - 40px);
+      }
+
+      .loading-title {
+        font-size: 1.4em;
+        padding: 0 20px;
       }
     }
   </style>
 </head>
 <body>
 
-  <!-- LOADING SCREEN -->
+  <!-- Loading Screen -->
   <div id="loading-screen">
     <div class="loading-content">
-      <img src="cencorse.png" alt="CBNC" class="loading-logo">
       <div class="loading-title">Flore des Serpentinites</div>
-      <div class="loading-subtitle">Conservatoire Botanique National de Corse</div>
-      <div class="progress-container">
-        <div class="progress-bar" id="progress-bar"></div>
+      <div class="loading-subtitle">Conservation d'Espaces Naturels Corse</div>
+      <div class="loading-bar-container">
+        <div class="loading-bar" id="loading-bar"></div>
       </div>
       <div class="loading-status" id="loading-status">Initialisation...</div>
     </div>
   </div>
 
-  <!-- HEADER -->
+  <!-- Header -->
   <header id="header">
     <div class="header-content">
-      <div class="logo-section">
-        <img src="cencorse.png" alt="CBNC" class="logo-img">
-        <div class="title-block">
-          <h1 class="main-title">Répartition de la Flore des Serpentinites (espèces PNA)</h1>
-          <p class="subtitle">Haute-Corse — <strong>Données 2026</strong> — Source : © CBNC</p>
+      <img src="cencorse.png" alt="CBNC" class="header-logo">
+      <div class="header-text">
+        <h1 class="header-title">Répartition de la Flore des Serpentinites en Haute-Corse</h1>
+        <div class="header-meta">
+          <span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+            Espèces PNA
+          </span>
+          <span class="header-badge">2026</span>
+          <span>Source : © CBNC</span>
         </div>
-      </div>
-      
-      <div class="controls">
-        <div id="basemap-dropdown">
-          <button class="control-btn secondary" id="basemap-btn">
-            <span class="control-icon">🗺️</span>
-            <span>Fond de carte</span>
-          </button>
-          <div class="basemap-menu" id="basemap-menu">
-            <div class="basemap-menu-title">Choisir un fond de carte</div>
-            <div class="basemap-option active" data-basemap="osm">
-              <div class="basemap-icon osm">🌿</div>
-              <span class="basemap-label">OpenStreetMap</span>
-              <span class="basemap-check">✓</span>
-            </div>
-            <div class="basemap-option" data-basemap="topo">
-              <div class="basemap-icon topo">🏔️</div>
-              <span class="basemap-label">Topographique</span>
-              <span class="basemap-check">✓</span>
-            </div>
-            <div class="basemap-option" data-basemap="satellite">
-              <div class="basemap-icon sat">🛰️</div>
-              <span class="basemap-label">Satellite</span>
-              <span class="basemap-check">✓</span>
-            </div>
-            <div class="basemap-option" data-basemap="dark">
-              <div class="basemap-icon dark">🌙</div>
-              <span class="basemap-label">Mode sombre</span>
-              <span class="basemap-check">✓</span>
-            </div>
-          </div>
-        </div>
-        
-        <button class="control-btn primary" id="legend-btn">
-          <span class="control-icon">📋</span>
-          <span>Légende</span>
-        </button>
       </div>
     </div>
   </header>
 
-  <!-- LEGEND PANEL -->
-  <div id="legend-panel">
-    <div class="legend-header">
-      <h3 class="legend-title">📊 Légende des espèces</h3>
-      <div class="legend-count" id="legend-count">Chargement...</div>
+  <!-- Map Container -->
+  <div id="map"></div>
+
+  <!-- Control Buttons -->
+  <div class="controls-panel">
+    <!-- Basemap Selector -->
+    <div style="position: relative;">
+      <button class="control-btn" id="basemap-btn">
+        <span class="control-icon">🗺️</span>
+        Fond de carte
+        <span class="control-arrow">▼</span>
+      </button>
+      <div class="dropdown-panel" id="basemap-panel">
+        <div class="dropdown-header">Sélectionner un fond</div>
+        <div class="dropdown-item selected" data-basemap="osm">
+          <span class="check">✓</span>
+          OpenStreetMap
+        </div>
+        <div class="dropdown-item" data-basemap="satellite">
+          <span class="check">✓</span>
+          Google Satellite
+        </div>
+        <div class="dropdown-item" data-basemap="hybrid">
+          <span class="check">✓</span>
+          Satellite + Labels
+        </div>
+        <div class="dropdown-item" data-basemap="terrain">
+          <span class="check">✓</span>
+          Google Terrain
+        </div>
+        <div class="dropdown-item" data-basemap="topo">
+          <span class="check">✓</span>
+          OpenTopoMap
+        </div>
+      </div>
     </div>
-    <div class="legend-content" id="legend-content">
-      <!-- Dynamically populated -->
+
+    <!-- Legend -->
+    <div style="position: relative;">
+      <button class="control-btn" id="legend-btn">
+        <span class="control-icon">📋</span>
+        Légende
+        <span class="control-arrow">▼</span>
+      </button>
+      <div class="dropdown-panel" id="legend-panel">
+        <div class="dropdown-header">Espèces recensées</div>
+        <!-- Populated by JS -->
+      </div>
     </div>
   </div>
 
-  <!-- MAP -->
-  <div id="map"></div>
-
-  <!-- STATS BAR -->
-  <div id="stats-bar">
+  <!-- Stats Bar -->
+  <div id="stats-bar" style="display: none;">
     <div class="stat-item">
-      <span>Observations :</span>
-      <span class="stat-value" id="stat-obs">—</span>
+      <span class="stat-value" id="stat-observations">—</span>
+      <span class="stat-label">observations</span>
     </div>
+    <div class="stat-divider"></div>
     <div class="stat-item">
-      <span>Espèces :</span>
       <span class="stat-value" id="stat-species">—</span>
+      <span class="stat-label">espèces</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <span class="stat-value" id="stat-communes">—</span>
+      <span class="stat-label">communes</span>
     </div>
   </div>
 
@@ -618,243 +630,299 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 
   <script>
-    // ===== LOADING MANAGEMENT =====
-    const loadingScreen = document.getElementById('loading-screen');
-    const progressBar = document.getElementById('progress-bar');
-    const loadingStatus = document.getElementById('loading-status');
+    // === CONFIGURATION ===
+    const CONFIG = {
+      geojsonFile: 'QR_serpentinites_2026_clean.geojson',
+      defaultView: [42.35, 9.25],
+      defaultZoom: 5,
+      palette: [
+        '#E53935',  // Rouge vif
+        '#43A047',  // Vert émeraude
+        '#1E88E5',  // Bleu
+        '#FB8C00',  // Orange
+        '#8E24AA',  // Violet
+        '#00ACC1',  // Cyan/Turquoise
+        '#D81B60'   // Rose/Magenta
+      ]
+    };
 
-    function updateProgress(percent, status) {
-      progressBar.style.width = percent + '%';
-      loadingStatus.textContent = status;
+    // === BASEMAPS ===
+    const basemaps = {
+      osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      }),
+      satellite: L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        attribution: '© Google'
+      }),
+      hybrid: L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        attribution: '© Google'
+      }),
+      terrain: L.tileLayer('https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        attribution: '© Google'
+      }),
+      topo: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+        maxZoom: 17,
+        attribution: '© <a href="https://opentopomap.org">OpenTopoMap</a>'
+      })
+    };
+
+    let currentBasemap = 'osm';
+    let map, dataLayer;
+
+    // === LOADING FUNCTIONS ===
+    function updateLoading(percent, status) {
+      document.getElementById('loading-bar').style.width = percent + '%';
+      document.getElementById('loading-status').textContent = status;
     }
 
     function hideLoading() {
-      loadingScreen.classList.add('hidden');
+      document.getElementById('loading-screen').classList.add('hidden');
     }
 
-    // ===== BASEMAP CONFIGURATION =====
-    const basemaps = {
-      osm: {
-        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributeurs',
-        maxZoom: 19
-      },
-      topo: {
-        url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-        attribution: '© <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
-        maxZoom: 17
-      },
-      satellite: {
-        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-        attribution: '© <a href="https://www.esri.com">Esri</a>, Maxar, Earthstar Geographics',
-        maxZoom: 19
-      },
-      dark: {
-        url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-        attribution: '© <a href="https://carto.com">CARTO</a>',
-        maxZoom: 19
-      }
-    };
+    // === INITIALIZE MAP ===
+    function initMap() {
+      updateLoading(20, 'Initialisation de la carte...');
+      
+      map = L.map('map', {
+        zoomControl: true,
+        attributionControl: true
+      }).setView(CONFIG.defaultView, CONFIG.defaultZoom);
 
-    let currentBasemapLayer = null;
-
-    // ===== INITIALIZE MAP =====
-    updateProgress(10, 'Initialisation de la carte...');
-
-    const map = L.map('map', {
-      zoomControl: true,
-      attributionControl: true
-    }).setView([42.4, 9.2], 9); // Corse par défaut
-
-    // Set initial basemap
-    function setBasemap(name) {
-      const config = basemaps[name];
-      if (!config) return;
-
-      if (currentBasemapLayer) {
-        map.removeLayer(currentBasemapLayer);
-      }
-
-      currentBasemapLayer = L.tileLayer(config.url, {
-        maxZoom: config.maxZoom,
-        attribution: config.attribution
+      basemaps[currentBasemap].addTo(map);
+      
+      // Scale control
+      L.control.scale({ 
+        metric: true, 
+        imperial: false,
+        position: 'bottomleft'
       }).addTo(map);
 
-      // Update UI
-      document.querySelectorAll('.basemap-option').forEach(opt => {
-        opt.classList.toggle('active', opt.dataset.basemap === name);
+      updateLoading(40, 'Chargement des données...');
+      loadGeoJSON();
+    }
+
+    // === LOAD GEOJSON ===
+    function loadGeoJSON() {
+      fetch(CONFIG.geojsonFile)
+        .then(response => {
+          if (!response.ok) throw new Error('Fichier introuvable');
+          updateLoading(60, 'Traitement des données...');
+          return response.json();
+        })
+        .then(geojson => {
+          processData(geojson);
+        })
+        .catch(err => {
+          console.error(err);
+          updateLoading(100, 'Erreur de chargement');
+          alert('Impossible de charger les données. Vérifiez que le fichier GeoJSON est accessible.');
+          hideLoading();
+        });
+    }
+
+    // === PROCESS DATA ===
+    function processData(geojson) {
+      updateLoading(80, 'Création des marqueurs...');
+
+      // Build color map and stats
+      const speciesColors = {};
+      const speciesCounts = {};
+      const communes = new Set();
+      let colorIndex = 0;
+
+      geojson.features.forEach(feature => {
+        const props = feature.properties;
+        const species = props.nom_reconn;
+        const commune = props.commune;
+
+        if (species && !(species in speciesColors)) {
+          speciesColors[species] = CONFIG.palette[colorIndex % CONFIG.palette.length];
+          speciesCounts[species] = 0;
+          colorIndex++;
+        }
+        
+        if (species) speciesCounts[species]++;
+        if (commune) communes.add(commune);
+      });
+
+      // Create GeoJSON layer
+      dataLayer = L.geoJSON(geojson, {
+        pointToLayer: (feature, latlng) => {
+          const species = feature.properties.nom_reconn;
+          const color = speciesColors[species] || '#999';
+          
+          return L.circleMarker(latlng, {
+            radius: 7,
+            fillColor: color,
+            color: '#fff',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.85
+          });
+        },
+        onEachFeature: (feature, layer) => {
+          const p = feature.properties;
+          
+          // Extract short species name (genus + species)
+          let shortName = p.nom_reconn || 'Inconnu';
+          const commaIndex = shortName.indexOf(',');
+          if (commaIndex > -1) {
+            shortName = shortName.substring(0, commaIndex);
+          }
+
+          const html = `
+            <div class="popup-title">${shortName}</div>
+            <div class="popup-row">
+              <span class="popup-label">Nom complet</span>
+              <span class="popup-value italic">${p.nom_reconn || '—'}</span>
+            </div>
+            <div class="popup-row">
+              <span class="popup-label">Nom cité</span>
+              <span class="popup-value italic">${p.nom_cite || '—'}</span>
+            </div>
+            <div class="popup-row">
+              <span class="popup-label">Date</span>
+              <span class="popup-value">${p.date_relev || '—'}</span>
+            </div>
+            <div class="popup-row">
+              <span class="popup-label">Observateur</span>
+              <span class="popup-value">${p.nom_obs || '—'}</span>
+            </div>
+            <div class="popup-row">
+              <span class="popup-label">Commune</span>
+              <span class="popup-value">${p.commune || '—'}</span>
+            </div>
+            <div class="popup-row">
+              <span class="popup-label">Lieu-dit</span>
+              <span class="popup-value">${p.lieudit || '—'}</span>
+            </div>
+            <div class="popup-row">
+              <span class="popup-label">Organisme</span>
+              <span class="popup-value">${p.nom_org_f || '—'}</span>
+            </div>
+          `;
+          
+          layer.bindPopup(html, { maxWidth: 350 });
+        }
+      }).addTo(map);
+
+      // Fit bounds
+      try {
+        map.fitBounds(dataLayer.getBounds(), { padding: [50, 50] });
+      } catch (e) {
+        console.warn('Bounds error:', e);
+      }
+
+      // Update stats
+      document.getElementById('stat-observations').textContent = geojson.features.length.toLocaleString('fr-FR');
+      document.getElementById('stat-species').textContent = Object.keys(speciesColors).length;
+      document.getElementById('stat-communes').textContent = communes.size;
+      document.getElementById('stats-bar').style.display = 'flex';
+
+      // Build legend
+      buildLegend(speciesColors, speciesCounts);
+
+      updateLoading(100, 'Terminé');
+      setTimeout(hideLoading, 300);
+    }
+
+    // === BUILD LEGEND ===
+    function buildLegend(speciesColors, speciesCounts) {
+      const legendPanel = document.getElementById('legend-panel');
+      const header = legendPanel.querySelector('.dropdown-header');
+      
+      // Sort species by count (descending)
+      const sortedSpecies = Object.entries(speciesCounts)
+        .sort((a, b) => b[1] - a[1]);
+
+      sortedSpecies.forEach(([species, count]) => {
+        const color = speciesColors[species];
+        
+        // Short name for display
+        let shortName = species;
+        const commaIndex = shortName.indexOf(',');
+        if (commaIndex > -1) {
+          shortName = shortName.substring(0, commaIndex);
+        }
+
+        const item = document.createElement('div');
+        item.className = 'legend-item';
+        item.innerHTML = `
+          <span class="legend-color" style="background: ${color};"></span>
+          <span class="legend-name">${shortName}</span>
+          <span class="legend-count">${count}</span>
+        `;
+        legendPanel.appendChild(item);
       });
     }
 
-    setBasemap('osm');
-    updateProgress(25, 'Fond de carte chargé...');
-
-    // ===== BASEMAP SELECTOR =====
-    const basemapBtn = document.getElementById('basemap-btn');
-    const basemapMenu = document.getElementById('basemap-menu');
-
-    basemapBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      basemapMenu.classList.toggle('active');
-    });
-
-    document.querySelectorAll('.basemap-option').forEach(option => {
-      option.addEventListener('click', () => {
-        setBasemap(option.dataset.basemap);
-        basemapMenu.classList.remove('active');
+    // === UI INTERACTIONS ===
+    function setupUI() {
+      // Basemap dropdown
+      const basemapBtn = document.getElementById('basemap-btn');
+      const basemapPanel = document.getElementById('basemap-panel');
+      
+      basemapBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        basemapBtn.classList.toggle('active');
+        basemapPanel.classList.toggle('show');
+        document.getElementById('legend-panel').classList.remove('show');
+        document.getElementById('legend-btn').classList.remove('active');
       });
-    });
 
-    document.addEventListener('click', (e) => {
-      if (!basemapMenu.contains(e.target) && e.target !== basemapBtn) {
-        basemapMenu.classList.remove('active');
-      }
-    });
-
-    // ===== LEGEND TOGGLE =====
-    const legendBtn = document.getElementById('legend-btn');
-    const legendPanel = document.getElementById('legend-panel');
-
-    legendBtn.addEventListener('click', () => {
-      legendPanel.classList.toggle('active');
-    });
-
-    // ===== LOAD GEOJSON DATA =====
-    updateProgress(40, 'Chargement des données...');
-
-    // Scientific color palette (ColorBrewer-inspired for scientific visualization)
-    const scientificPalette = [
-      '#d62728', '#1f77b4', '#2ca02c', '#9467bd', '#ff7f0e',
-      '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf',
-      '#393b79', '#637939', '#8c6d31', '#843c39', '#7b4173',
-      '#5254a3', '#8ca252', '#bd9e39', '#ad494a', '#a55194'
-    ];
-
-    fetch('QR_serpentinites_2026.geojson')
-      .then(response => {
-        updateProgress(60, 'Traitement des données...');
-        return response.json();
-      })
-      .then(geojson => {
-        updateProgress(75, 'Génération de la visualisation...');
-
-        // Build color map for species
-        const speciesColors = {};
-        let colorIndex = 0;
-
-        geojson.features.forEach(feature => {
-          const species = feature.properties.nom_reconn;
-          if (species && !(species in speciesColors)) {
-            speciesColors[species] = scientificPalette[colorIndex % scientificPalette.length];
-            colorIndex++;
+      // Basemap selection
+      basemapPanel.querySelectorAll('.dropdown-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const newBasemap = item.dataset.basemap;
+          if (newBasemap !== currentBasemap) {
+            map.removeLayer(basemaps[currentBasemap]);
+            basemaps[newBasemap].addTo(map);
+            currentBasemap = newBasemap;
+            
+            // Update selected state
+            basemapPanel.querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('selected'));
+            item.classList.add('selected');
           }
+          basemapPanel.classList.remove('show');
+          basemapBtn.classList.remove('active');
         });
-
-        // Create GeoJSON layer
-        const dataLayer = L.geoJSON(geojson, {
-          pointToLayer: (feature, latlng) => {
-            return L.circleMarker(latlng, {
-              radius: 7,
-              weight: 2,
-              opacity: 0.9,
-              fillOpacity: 0.7
-            });
-          },
-          style: (feature) => {
-            const species = feature.properties.nom_reconn;
-            const color = speciesColors[species] || '#888888';
-            return {
-              color: '#ffffff',
-              fillColor: color,
-              weight: 2,
-              fillOpacity: 0.8
-            };
-          },
-          onEachFeature: (feature, layer) => {
-            const props = feature.properties || {};
-            
-            // Build formatted popup
-            let speciesName = props.nom_reconn ? props.nom_reconn.split(',')[0] : 'Espèce inconnue';
-            let popupHtml = `<div class="popup-title">${speciesName}</div>`;
-            
-            // Add relevant properties
-            const displayFields = {
-              'nom_reconn': 'Nom complet',
-              'date_debut': 'Date',
-              'observateur': 'Observateur',
-              'commune': 'Commune',
-              'lieu_dit': 'Lieu-dit',
-              'altitude': 'Altitude',
-              'precision': 'Précision',
-              'source': 'Source'
-            };
-
-            for (const [key, label] of Object.entries(displayFields)) {
-              if (props[key] && props[key] !== '' && props[key] !== null) {
-                popupHtml += `<div class="popup-row">
-                  <span class="popup-label">${label}</span>
-                  <span class="popup-value">${props[key]}</span>
-                </div>`;
-              }
-            }
-
-            layer.bindPopup(popupHtml, { maxWidth: 300 });
-          }
-        }).addTo(map);
-
-        updateProgress(90, 'Finalisation...');
-
-        // Fit bounds
-        try {
-          map.fitBounds(dataLayer.getBounds(), { padding: [50, 50] });
-        } catch (e) {
-          console.warn('Bounds calculation failed:', e);
-        }
-
-        // Update legend
-        const legendContent = document.getElementById('legend-content');
-        const legendCount = document.getElementById('legend-count');
-        
-        legendCount.textContent = `${Object.keys(speciesColors).length} espèces • ${geojson.features.length} observations`;
-        
-        let legendHtml = '';
-        Object.entries(speciesColors)
-          .sort((a, b) => a[0].localeCompare(b[0]))
-          .forEach(([species, color]) => {
-            const shortName = species.split(',')[0];
-            legendHtml += `
-              <div class="legend-item">
-                <div class="legend-marker" style="background-color: ${color};"></div>
-                <span class="legend-species">${shortName}</span>
-              </div>
-            `;
-          });
-        legendContent.innerHTML = legendHtml;
-
-        // Update stats
-        document.getElementById('stat-obs').textContent = geojson.features.length;
-        document.getElementById('stat-species').textContent = Object.keys(speciesColors).length;
-
-        // Complete loading
-        updateProgress(100, 'Terminé !');
-        setTimeout(hideLoading, 500);
-      })
-      .catch(err => {
-        console.error('Error loading GeoJSON:', err);
-        loadingStatus.textContent = 'Erreur de chargement';
-        progressBar.style.background = '#e74c3c';
-        setTimeout(() => {
-          hideLoading();
-          alert('Impossible de charger les données. Veuillez réessayer.');
-        }, 1000);
       });
 
-    // Add scale control
-    L.control.scale({
-      metric: true,
-      imperial: false,
-      position: 'bottomright'
-    }).addTo(map);
+      // Legend dropdown
+      const legendBtn = document.getElementById('legend-btn');
+      const legendPanel = document.getElementById('legend-panel');
+      
+      legendBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        legendBtn.classList.toggle('active');
+        legendPanel.classList.toggle('show');
+        basemapPanel.classList.remove('show');
+        basemapBtn.classList.remove('active');
+      });
+
+      // Close dropdowns on outside click
+      document.addEventListener('click', (e) => {
+        if (!basemapPanel.contains(e.target) && e.target !== basemapBtn) {
+          basemapPanel.classList.remove('show');
+          basemapBtn.classList.remove('active');
+        }
+        if (!legendPanel.contains(e.target) && e.target !== legendBtn) {
+          legendPanel.classList.remove('show');
+          legendBtn.classList.remove('active');
+        }
+      });
+    }
+
+    // === INIT ===
+    document.addEventListener('DOMContentLoaded', () => {
+      updateLoading(10, 'Démarrage...');
+      setupUI();
+      initMap();
+    });
   </script>
 </body>
 </html>
