@@ -6,6 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Carte interactive de répartition de la flore des serpentinites en Haute-Corse - Conservatoire Botanique National de Corse">
 
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" href="favicon.png">
+
   <!-- Google Fonts - Scientific typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -113,6 +117,9 @@
       background: var(--bg-panel);
       border-bottom: 1px solid var(--border);
       box-shadow: 0 2px 12px var(--shadow);
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
+      overflow: hidden;
     }
 
     .header-content {
@@ -185,7 +192,7 @@
       position: fixed;
       top: 84px;
       right: 16px;
-      z-index: 1001;
+      z-index: 10000;
       display: flex;
       flex-direction: column;
       gap: 8px;
@@ -249,6 +256,7 @@
       overflow-y: auto;
       display: none;
       animation: slideDown 0.2s ease;
+      z-index: 10001; /* Au-dessus de tout */
     }
 
     .dropdown-panel.show {
@@ -358,6 +366,81 @@
       border-radius: 10px;
     }
 
+    /* === LAYER CONTROLS === */
+    .layer-control-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(0,0,0,0.04);
+    }
+
+    .layer-control-item:last-child {
+      border-bottom: none;
+    }
+
+    .layer-checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+
+    .layer-checkbox {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: var(--primary);
+    }
+
+    .layer-name {
+      flex: 1;
+      font-size: 0.88em;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .layer-status {
+      font-size: 0.75em;
+      color: var(--text-light);
+      font-style: italic;
+    }
+
+    .layer-color-indicator {
+      width: 20px;
+      height: 20px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      margin-bottom: 8px;
+      flex-shrink: 0;
+    }
+
+    .layer-opacity-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8em;
+      color: var(--text-light);
+      margin-top: 8px;
+    }
+
+    .layer-opacity-control label {
+      font-size: 0.85em;
+      min-width: 50px;
+    }
+
+    .opacity-slider {
+      flex: 1;
+      height: 4px;
+      cursor: pointer;
+      accent-color: var(--primary);
+    }
+
+    .opacity-value {
+      min-width: 35px;
+      text-align: right;
+      font-size: 0.85em;
+      color: var(--text);
+    }
+
     /* === STATS BAR === */
     #stats-bar {
       position: fixed;
@@ -372,7 +455,7 @@
       align-items: center;
       gap: 24px;
       box-shadow: 0 4px 20px var(--shadow);
-      z-index: 1001;
+      z-index: 10000;
       font-size: 0.85em;
     }
 
@@ -662,6 +745,55 @@
         <!-- Populated by JS -->
       </div>
     </div>
+
+    <!-- Additional Layers -->
+    <div style="position: relative;">
+      <button class="control-btn" id="layers-btn">
+        <span class="control-icon">🗂️</span>
+        Couches supplémentaires
+        <span class="control-arrow">▼</span>
+      </button>
+      <div class="dropdown-panel" id="layers-panel">
+        <div class="dropdown-header">COUCHES SUPPLÉMENTAIRES</div>
+        <div class="layer-control-item" id="serpentinites-layer-control">
+          <label class="layer-checkbox-label">
+            <input type="checkbox" id="serpentinites-checkbox" class="layer-checkbox">
+            <span class="layer-name">Domaines serpentinitiques et roches associées (± 450 km²)</span>
+            <span class="layer-status" id="serpentinites-status">(non chargé)</span>
+          </label>
+          <div class="layer-color-indicator" style="background: #000000;"></div>
+          <div class="layer-opacity-control">
+            <label>Opacité:</label>
+            <input type="range" id="serpentinites-opacity" min="0" max="100" value="50" class="opacity-slider">
+            <span class="opacity-value" id="serpentinites-opacity-value">50%</span>
+          </div>
+        </div>
+        
+        <!-- Zones amiantifères layer -->
+        <div class="layer-control-item" id="amiantiferes-layer-control">
+          <label class="layer-checkbox-label">
+            <input type="checkbox" id="amiantiferes-checkbox" class="layer-checkbox">
+            <span class="layer-name">Zones amiantifères</span>
+            <span class="layer-status" id="amiantiferes-status">(non chargé)</span>
+          </label>
+          <div class="layer-opacity-control">
+            <label>Opacité:</label>
+            <input type="range" id="amiantiferes-opacity" min="0" max="100" value="70" class="opacity-slider">
+            <span class="opacity-value" id="amiantiferes-opacity-value">70%</span>
+          </div>
+          <div style="font-size: 0.75em; color: var(--text-light); margin-top: 5px; padding-left: 24px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="display: inline-block; width: 12px; height: 12px; background-color: #60A5FA; border: 1px solid #2563EB; border-radius: 2px;"></span>
+              <span>Faible probabilité (± 580 km²)</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+              <span style="display: inline-block; width: 12px; height: 12px; background-color: #1E3A8A; border: 1px solid #1E3A8A; border-radius: 2px;"></span>
+              <span>Forte probabilité (± 340 km²)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Stats Bar -->
@@ -684,6 +816,8 @@
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  
+  <!-- JSZip no longer needed - using GeoJSON directly -->
 
   <script>
     // === CONFIGURATION ===
@@ -728,6 +862,7 @@
 
     let currentBasemap = 'osm';
     let map, dataLayer;
+    let serpentinitesLayer = null; // Layer for the GeoJSON file
 
     // === LOADING FUNCTIONS ===
     function updateLoading(percent, status) {
@@ -759,10 +894,15 @@
 
       updateLoading(40, 'Chargement des données...');
       loadGeoJSON();
+      
+      // Load additional layers automatically
+      loadSerpentinitesLayer();
+      loadAmiantiferesLayer();
     }
 
     // === LOAD GEOJSON ===
     function loadGeoJSON() {
+      // Try fetch first (works on GitHub/servers)
       fetch(CONFIG.geojsonFile)
         .then(response => {
           if (!response.ok) throw new Error('Fichier introuvable');
@@ -773,11 +913,426 @@
           processData(geojson);
         })
         .catch(err => {
-          console.error(err);
-          updateLoading(100, 'Erreur de chargement');
-          alert('Impossible de charger les données. Vérifiez que le fichier GeoJSON est accessible.');
-          hideLoading();
+          console.log('Fetch failed (local file), using file input method...', err);
+          // If fetch fails (local files), use file input
+          // Add a small delay to ensure UI is ready
+          setTimeout(() => {
+            loadGeoJSONViaFileInput();
+          }, 500);
         });
+    }
+
+    // === LOAD GEOJSON VIA FILE INPUT (for local files) ===
+    function loadGeoJSONViaFileInput() {
+      updateLoading(50, 'Sélection du fichier GeoJSON...');
+      
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = '.geojson,.json';
+      fileInput.style.display = 'none';
+      document.body.appendChild(fileInput);
+      
+      // Handle file selection
+      fileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          updateLoading(60, 'Lecture du fichier...');
+          const reader = new FileReader();
+          
+          reader.onload = (event) => {
+            try {
+              const geojson = JSON.parse(event.target.result);
+              updateLoading(70, 'Traitement des données...');
+              processData(geojson);
+              // Clean up
+              document.body.removeChild(fileInput);
+            } catch (error) {
+              console.error('Erreur de parsing JSON:', error);
+              updateLoading(100, 'Erreur de chargement');
+              alert('Erreur : Le fichier sélectionné n\'est pas un GeoJSON valide.\n\n' + error.message);
+              hideLoading();
+              document.body.removeChild(fileInput);
+            }
+          };
+          
+          reader.onerror = () => {
+            updateLoading(100, 'Erreur de chargement');
+            alert('Erreur lors de la lecture du fichier.');
+            hideLoading();
+            document.body.removeChild(fileInput);
+          };
+          
+          reader.readAsText(file);
+        } else {
+          // User cancelled file selection
+          updateLoading(100, 'Chargement annulé');
+          alert('Aucun fichier sélectionné. Veuillez recharger la page et sélectionner le fichier QR_serpentinites_2026_clean.geojson');
+          hideLoading();
+          document.body.removeChild(fileInput);
+        }
+      };
+      
+      // Handle cancellation
+      fileInput.oncancel = () => {
+        updateLoading(100, 'Chargement annulé');
+        alert('Sélection annulée. Veuillez recharger la page pour réessayer.');
+        hideLoading();
+        document.body.removeChild(fileInput);
+      };
+      
+      // Trigger file input after a brief delay
+      setTimeout(() => {
+        fileInput.click();
+      }, 100);
+    }
+
+    // === LOAD SERPENTINITES LAYER FROM GEOJSON ===
+    async function loadSerpentinitesLayer(fileBlob = null) {
+      const statusEl = document.getElementById('serpentinites-status');
+      const checkbox = document.getElementById('serpentinites-checkbox');
+      
+      try {
+        statusEl.textContent = '(chargement...)';
+        
+        let geojson;
+        
+        if (fileBlob) {
+          // Use provided file blob (from file input)
+          const text = await fileBlob.text();
+          geojson = JSON.parse(text);
+        } else {
+          // Try to load GeoJSON file via fetch
+          const response = await fetch('Domaines serpentinitiques et roches associées (± 450 km).geojson');
+          if (!response.ok) {
+            throw new Error(`Fichier GeoJSON introuvable (HTTP ${response.status})`);
+          }
+          geojson = await response.json();
+        }
+        
+        // Validate GeoJSON structure
+        if (!geojson.type || geojson.type !== 'FeatureCollection') {
+          throw new Error('Le fichier n\'est pas une FeatureCollection valide');
+        }
+        
+        if (!geojson.features || !Array.isArray(geojson.features)) {
+          throw new Error('Le fichier ne contient pas de features valides');
+        }
+        
+        console.log(`GeoJSON chargé: ${geojson.features.length} features`);
+        
+        // Get current opacity value
+        const opacitySlider = document.getElementById('serpentinites-opacity');
+        const opacity = opacitySlider ? parseInt(opacitySlider.value) / 100 : 0.5;
+        
+        // Create layer with black color
+        serpentinitesLayer = L.geoJSON(geojson, {
+          style: {
+            color: '#000000',
+            weight: 2,
+            opacity: opacity * 0.8,
+            fillColor: '#000000',
+            fillOpacity: opacity * 0.4
+          },
+          onEachFeature: function(feature, layer) {
+            // Optional: add popup if needed
+            if (feature.properties) {
+              const props = feature.properties;
+              let popupContent = '<div style="font-weight: 600; margin-bottom: 8px;">Domaines serpentinitiques</div>';
+              for (const key in props) {
+                if (props[key] !== null && props[key] !== '') {
+                  popupContent += `<div style="margin: 4px 0;"><strong>${key}:</strong> ${props[key]}</div>`;
+                }
+              }
+              layer.bindPopup(popupContent);
+            }
+          }
+        });
+        
+        // Set z-index to be behind point layers
+        // In Leaflet, layers added first are behind layers added later
+        // We'll use bringToBack() to ensure it stays behind
+        
+        statusEl.textContent = '(chargé)';
+        checkbox.disabled = false;
+        
+        // Layer is loaded but not visible by default
+        // User must check the checkbox to make it visible
+        
+      } catch (error) {
+        console.error('Erreur lors du chargement de la couche:', error);
+        console.error('Détails de l\'erreur:', error.message);
+        statusEl.textContent = '(erreur)';
+        statusEl.title = error.message; // Show error on hover
+        checkbox.disabled = false;
+        
+        // If fetch fails, allow manual file selection
+        if (error.message.includes('introuvable') || error.message.includes('HTTP')) {
+          statusEl.style.cursor = 'pointer';
+          statusEl.style.textDecoration = 'underline';
+          statusEl.onclick = () => {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = '.geojson,.json';
+            fileInput.style.display = 'none';
+            fileInput.onchange = (e) => {
+              const file = e.target.files[0];
+              if (file) {
+                loadSerpentinitesLayer(file);
+              }
+            };
+            fileInput.click();
+          };
+        }
+      }
+    }
+
+    // === TOGGLE SERPENTINITES LAYER ===
+    function toggleSerpentinitesLayer(checked) {
+      if (!serpentinitesLayer) {
+        if (checked) {
+          // Load layer when checkbox is checked
+          loadSerpentinitesLayer();
+        }
+        return;
+      }
+      
+      if (checked) {
+        serpentinitesLayer.addTo(map);
+      } else {
+        map.removeLayer(serpentinitesLayer);
+      }
+    }
+
+    // === UPDATE SERPENTINITES LAYER OPACITY ===
+    function updateSerpentinitesOpacity(opacity) {
+      if (!serpentinitesLayer) return;
+      
+      const opacityValue = opacity / 100;
+      serpentinitesLayer.setStyle({
+        fillOpacity: opacityValue * 0.4,
+        opacity: opacityValue * 0.8
+      });
+    }
+
+    // === LOAD AMIANTIFERES LAYER FROM GEOJSON ===
+    async function loadAmiantiferesLayer(fileBlob = null) {
+      const statusEl = document.getElementById('amiantiferes-status');
+      const checkbox = document.getElementById('amiantiferes-checkbox');
+      
+      try {
+        statusEl.textContent = '(chargement...)';
+        
+        let geojson;
+        
+        if (fileBlob) {
+          // Use provided file blob (from file input)
+          const text = await fileBlob.text();
+          geojson = JSON.parse(text);
+        } else {
+          // Try to load GeoJSON file via fetch
+          const response = await fetch('Zones amiantifères.geojson');
+          if (!response.ok) {
+            throw new Error(`Fichier GeoJSON introuvable (HTTP ${response.status})`);
+          }
+          geojson = await response.json();
+        }
+        
+        // Validate GeoJSON structure
+        if (!geojson.type || geojson.type !== 'FeatureCollection') {
+          throw new Error('Le fichier n\'est pas une FeatureCollection valide');
+        }
+        
+        if (!geojson.features || !Array.isArray(geojson.features)) {
+          throw new Error('Le fichier ne contient pas de features valides');
+        }
+        
+        console.log(`GeoJSON zones amiantifères chargé: ${geojson.features.length} features`);
+        
+        // Get current opacity value
+        const opacitySlider = document.getElementById('amiantiferes-opacity');
+        const opacity = opacitySlider ? parseInt(opacitySlider.value) / 100 : 0.7;
+        
+        // Create layer with different colors based on new_alea
+        // 2 = Faible probabilité (bleu clair)
+        // 3 = Forte probabilité (bleu foncé)
+        amiantiferesLayer = L.geoJSON(geojson, {
+          style: function(feature) {
+            const newAlea = feature.properties?.new_alea;
+            const opacityValue = opacity;
+            
+            if (newAlea === 3) {
+              // Forte probabilité - bleu foncé (très visible)
+              return {
+                color: '#1E3A8A',
+                weight: 4,
+                opacity: 1.0,
+                fillColor: '#1E3A8A',
+                fillOpacity: Math.max(opacityValue * 0.7, 0.6) // Minimum 60% opacity
+              };
+            } else if (newAlea === 2) {
+              // Faible probabilité - bleu clair (plus visible, bordure plus foncée pour contraste)
+              return {
+                color: '#2563EB', // Bleu plus foncé pour la bordure
+                weight: 3,
+                opacity: 1.0,
+                fillColor: '#60A5FA', // Bleu clair pour le remplissage
+                fillOpacity: Math.max(opacityValue * 0.65, 0.55) // Minimum 55% opacity
+              };
+            } else {
+              // Default - gris
+              return {
+                color: '#808080',
+                weight: 2,
+                opacity: opacityValue * 0.7,
+                fillColor: '#808080',
+                fillOpacity: opacityValue * 0.5
+              };
+            }
+          },
+          onEachFeature: function(feature, layer) {
+            // Add popup with information
+            if (feature.properties) {
+              const props = feature.properties;
+              const newAlea = props.new_alea;
+              const probaText = newAlea === 3 ? 'Forte probabilité (± 340 km²)' : 
+                                newAlea === 2 ? 'Faible probabilité (± 580 km²)' : 
+                                'Probabilité inconnue';
+              
+              let popupContent = '<div style="font-weight: 600; margin-bottom: 8px;">Zones amiantifères</div>';
+              popupContent += `<div style="margin: 4px 0;"><strong>Probabilité:</strong> ${probaText}</div>`;
+              
+              if (props['S km2']) {
+                popupContent += `<div style="margin: 4px 0;"><strong>Surface:</strong> ${props['S km2'].toFixed(2)} km²</div>`;
+              }
+              
+              if (props.id) {
+                popupContent += `<div style="margin: 4px 0;"><strong>ID:</strong> ${props.id}</div>`;
+              }
+              
+              layer.bindPopup(popupContent);
+            }
+          }
+        });
+        
+        // Set z-index to be behind point layers
+        // Will use bringToBack() when added to map
+        
+        statusEl.textContent = '(chargé)';
+        checkbox.disabled = false;
+        
+        // Debug: log layer info
+        const alea2Count = geojson.features.filter(f => f.properties?.new_alea === 2).length;
+        const alea3Count = geojson.features.filter(f => f.properties?.new_alea === 3).length;
+        console.log('Couche amiantifères créée:', {
+          totalFeatures: geojson.features.length,
+          faibleProba_new_alea_2: alea2Count,
+          forteProba_new_alea_3: alea3Count,
+          bounds: amiantiferesLayer.getBounds()
+        });
+        
+        // Layer is loaded but not visible by default
+        // User must check the checkbox to make it visible
+        
+      } catch (error) {
+        console.error('Erreur lors du chargement de la couche amiantifères:', error);
+        console.error('Détails de l\'erreur:', error.message);
+        statusEl.textContent = '(erreur)';
+        statusEl.title = error.message;
+        checkbox.disabled = false;
+        
+        // If fetch fails, allow manual file selection
+        if (error.message.includes('introuvable') || error.message.includes('HTTP')) {
+          statusEl.style.cursor = 'pointer';
+          statusEl.style.textDecoration = 'underline';
+          statusEl.onclick = () => {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = '.geojson,.json';
+            fileInput.style.display = 'none';
+            fileInput.onchange = (e) => {
+              const file = e.target.files[0];
+              if (file) {
+                loadAmiantiferesLayer(file);
+              }
+            };
+            fileInput.click();
+          };
+        }
+      }
+    }
+
+    // === TOGGLE AMIANTIFERES LAYER ===
+    function toggleAmiantiferesLayer(checked) {
+      // Layer should already be loaded automatically, just toggle visibility
+      if (!amiantiferesLayer) {
+        // If not loaded yet (shouldn't happen, but just in case)
+        const statusEl = document.getElementById('amiantiferes-status');
+        if (statusEl.textContent.includes('erreur')) {
+          // If there was an error, try to load manually
+          if (checked) {
+            loadAmiantiferesLayer();
+          }
+        }
+        return;
+      }
+      
+      if (checked) {
+        amiantiferesLayer.addTo(map);
+        // Ensure it's behind the point layers
+        amiantiferesLayer.bringToBack();
+        // Also ensure point layer stays on top
+        if (dataLayer) {
+          dataLayer.bringToFront();
+        }
+        
+        // Debug: verify layer is on map
+        console.log('Couche amiantifères ajoutée à la carte');
+        const bounds = amiantiferesLayer.getBounds();
+        console.log('Bounds amiantifères:', bounds);
+        console.log('Bounds valides?', bounds.isValid());
+        if (bounds.isValid()) {
+          console.log('Centre:', bounds.getCenter());
+          console.log('Zoom pour voir:', map.getBoundsZoom(bounds));
+        }
+      } else {
+        map.removeLayer(amiantiferesLayer);
+        console.log('Couche amiantifères retirée de la carte');
+      }
+    }
+
+    // === UPDATE AMIANTIFERES LAYER OPACITY ===
+    function updateAmiantiferesOpacity(opacity) {
+      if (!amiantiferesLayer) return;
+      
+      const opacityValue = opacity / 100;
+      // Update all features with new opacity
+      amiantiferesLayer.eachLayer(function(layer) {
+        const feature = layer.feature;
+        const newAlea = feature.properties?.new_alea;
+        
+        if (newAlea === 3) {
+          // Forte probabilité - bleu foncé
+          layer.setStyle({
+            color: '#1E3A8A',
+            fillColor: '#1E3A8A',
+            fillOpacity: Math.max(opacityValue * 0.7, 0.6),
+            opacity: 1.0
+          });
+        } else if (newAlea === 2) {
+          // Faible probabilité - bleu clair
+          layer.setStyle({
+            color: '#2563EB',
+            fillColor: '#60A5FA',
+            fillOpacity: Math.max(opacityValue * 0.65, 0.55),
+            opacity: 1.0
+          });
+        } else {
+          layer.setStyle({
+            fillOpacity: opacityValue * 0.3,
+            opacity: opacityValue * 0.7
+          });
+        }
+      });
     }
 
     // === PROCESS DATA ===
@@ -865,6 +1420,9 @@
           layer.bindPopup(html, { maxWidth: 350 });
         }
       }).addTo(map);
+      
+      // Ensure point layer is on top (bring to front)
+      dataLayer.bringToFront();
 
       // Fit bounds
       try {
@@ -960,6 +1518,52 @@
         basemapBtn.classList.remove('active');
       });
 
+      // Additional Layers dropdown
+      const layersBtn = document.getElementById('layers-btn');
+      const layersPanel = document.getElementById('layers-panel');
+      
+      layersBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        layersBtn.classList.toggle('active');
+        layersPanel.classList.toggle('show');
+        basemapPanel.classList.remove('show');
+        basemapBtn.classList.remove('active');
+        legendPanel.classList.remove('show');
+        legendBtn.classList.remove('active');
+      });
+
+      // Serpentinites layer checkbox
+      const serpentinitesCheckbox = document.getElementById('serpentinites-checkbox');
+      serpentinitesCheckbox.addEventListener('change', (e) => {
+        toggleSerpentinitesLayer(e.target.checked);
+      });
+
+      // Serpentinites layer opacity slider
+      const serpentinitesOpacity = document.getElementById('serpentinites-opacity');
+      const serpentinitesOpacityValue = document.getElementById('serpentinites-opacity-value');
+      
+      serpentinitesOpacity.addEventListener('input', (e) => {
+        const value = e.target.value;
+        serpentinitesOpacityValue.textContent = value + '%';
+        updateSerpentinitesOpacity(value);
+      });
+
+      // Amiantiferes layer checkbox
+      const amiantiferesCheckbox = document.getElementById('amiantiferes-checkbox');
+      amiantiferesCheckbox.addEventListener('change', (e) => {
+        toggleAmiantiferesLayer(e.target.checked);
+      });
+
+      // Amiantiferes layer opacity slider
+      const amiantiferesOpacity = document.getElementById('amiantiferes-opacity');
+      const amiantiferesOpacityValue = document.getElementById('amiantiferes-opacity-value');
+      
+      amiantiferesOpacity.addEventListener('input', (e) => {
+        const value = e.target.value;
+        amiantiferesOpacityValue.textContent = value + '%';
+        updateAmiantiferesOpacity(value);
+      });
+
       // Close dropdowns on outside click
       document.addEventListener('click', (e) => {
         if (!basemapPanel.contains(e.target) && e.target !== basemapBtn) {
@@ -969,6 +1573,10 @@
         if (!legendPanel.contains(e.target) && e.target !== legendBtn) {
           legendPanel.classList.remove('show');
           legendBtn.classList.remove('active');
+        }
+        if (!layersPanel.contains(e.target) && e.target !== layersBtn) {
+          layersPanel.classList.remove('show');
+          layersBtn.classList.remove('active');
         }
       });
     }
