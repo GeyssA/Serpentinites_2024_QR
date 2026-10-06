@@ -1131,27 +1131,86 @@
       }
     };
 
-    // === BASEMAPS ===
-    // Tuile mer : l'IGN ne sert pas les dalles hors de son emprise (404).
-    // Sans repli, Leaflet laisse le fond blanc dès qu'on zoome.
-    const IGN_SEA_TILE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNYdfUlAASVAmm/2Ga2AAAAAElFTkSuQmCC';
+    // L'IGN répond 200 avec une petite image blanche hors de son emprise.
+    // On ne l'affiche pas : le fond mondial dessous reste visible.
+    const TRANSPARENT_TILE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+
+    const IgnTileLayer = L.TileLayer.extend({
+      createTile: function (coords, done) {
+        const tile = document.createElement('img');
+        tile.alt = '';
+        const url = this.getTileUrl(coords);
+        const show = (src) => {
+          let settled = false;
+          const finish = () => {
+            if (settled) return;
+            settled = true;
+            done(null, tile);
+          };
+          tile.onload = finish;
+          tile.onerror = finish;
+          tile.src = src;
+          if (tile.complete && tile.naturalWidth) finish();
+        };
+        fetch(url).then((response) => {
+          if (!response.ok) throw new Error('tuile absente');
+          return response.blob();
+        }).then((blob) => {
+          if (blob.size < 1500) {
+            show(TRANSPARENT_TILE);
+            return;
+          }
+          const objectUrl = URL.createObjectURL(blob);
+          tile._objectUrl = objectUrl;
+          show(objectUrl);
+        }).catch(() => {
+          show(TRANSPARENT_TILE);
+        });
+        return tile;
+      }
+    });
+
+    function ignOver(ignUrl, underUrl) {
+      const under = L.tileLayer(underUrl, { maxZoom: 19, attribution: '© Esri' });
+      const ign = new IgnTileLayer(ignUrl, {
+        maxZoom: 19,
+        attribution: '© <a href="https://www.ign.fr/">IGN</a>'
+      });
+      ign.on('tileunload', (event) => {
+        if (event.tile._objectUrl) URL.revokeObjectURL(event.tile._objectUrl);
+      });
+      return L.layerGroup([under, ign]);
+    }
+
+    function sendBasemapToBack(layer) {
+      if (layer.eachLayer) {
+        const parts = [];
+        layer.eachLayer((child) => parts.push(child));
+        for (let i = parts.length - 1; i >= 0; i--) {
+          if (parts[i].bringToBack) parts[i].bringToBack();
+        }
+        return;
+      }
+      if (layer.bringToBack) layer.bringToBack();
+    }
+
+    const ESRI_RELIEF = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}';
+    const ESRI_SATELLITE = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 
     const basemaps = {
-      ign: L.tileLayer('https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}', {
-        maxZoom: 19,
-        errorTileUrl: IGN_SEA_TILE,
-        attribution: '© <a href="https://www.ign.fr/">IGN</a>'
-      }),
-      ortho: L.tileLayer('https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ORTHOIMAGERY.ORTHOPHOTOS&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}', {
-        maxZoom: 19,
-        errorTileUrl: IGN_SEA_TILE,
-        attribution: '© <a href="https://www.ign.fr/">IGN</a>'
-      }),
-      relief: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+      ign: ignOver(
+        'https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',
+        ESRI_RELIEF
+      ),
+      ortho: ignOver(
+        'https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ORTHOIMAGERY.ORTHOPHOTOS&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',
+        ESRI_SATELLITE
+      ),
+      relief: L.tileLayer(ESRI_RELIEF, {
         maxZoom: 19,
         attribution: '© Esri'
       }),
-      satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      satellite: L.tileLayer(ESRI_SATELLITE, {
         maxZoom: 19,
         attribution: '© Esri'
       })
@@ -2238,7 +2297,7 @@
           if (newBasemap !== currentBasemap) {
             map.removeLayer(basemaps[currentBasemap]);
             basemaps[newBasemap].addTo(map);
-            basemaps[newBasemap].bringToBack();
+            sendBasemapToBack(basemaps[newBasemap]);
             currentBasemap = newBasemap;
             basemapPanel.querySelectorAll('.dropdown-item').forEach((i) => i.classList.remove('selected'));
             item.classList.add('selected');
