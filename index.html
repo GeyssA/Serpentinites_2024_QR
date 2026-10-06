@@ -979,7 +979,6 @@
         <div class="sheet-body">
           <button type="button" class="dropdown-item selected" data-basemap="ign"><span class="check">✓</span>Plan IGN</button>
           <button type="button" class="dropdown-item" data-basemap="ortho"><span class="check">✓</span>Orthophoto IGN</button>
-          <button type="button" class="dropdown-item" data-basemap="clair"><span class="check">✓</span>Fond clair</button>
           <button type="button" class="dropdown-item" data-basemap="relief"><span class="check">✓</span>Relief</button>
           <button type="button" class="dropdown-item" data-basemap="satellite"><span class="check">✓</span>Satellite</button>
         </div>
@@ -1133,19 +1132,20 @@
     };
 
     // === BASEMAPS ===
+    // Tuile mer : l'IGN ne sert pas les dalles hors de son emprise (404).
+    // Sans repli, Leaflet laisse le fond blanc dès qu'on zoome.
+    const IGN_SEA_TILE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNYdfUlAASVAmm/2Ga2AAAAAElFTkSuQmCC';
+
     const basemaps = {
       ign: L.tileLayer('https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}', {
         maxZoom: 19,
+        errorTileUrl: IGN_SEA_TILE,
         attribution: '© <a href="https://www.ign.fr/">IGN</a>'
       }),
       ortho: L.tileLayer('https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ORTHOIMAGERY.ORTHOPHOTOS&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}', {
         maxZoom: 19,
+        errorTileUrl: IGN_SEA_TILE,
         attribution: '© <a href="https://www.ign.fr/">IGN</a>'
-      }),
-      clair: L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        subdomains: 'abcd',
-        maxZoom: 20,
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>'
       }),
       relief: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
         maxZoom: 19,
