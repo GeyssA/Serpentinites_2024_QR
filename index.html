@@ -1155,10 +1155,21 @@
         fetch(url).then((response) => {
           if (!response.ok) throw new Error('tuile absente');
           return response.blob();
-        }).then((blob) => {
+        }).then(async (blob) => {
+          // Les dalles vides sont toutes blanches et légères.
+          // Les dalles de mer sont légères aussi, mais bleues : on teste la couleur.
           if (blob.size < 1500) {
-            show(TRANSPARENT_TILE);
-            return;
+            const bitmap = await createImageBitmap(blob);
+            const canvas = document.createElement('canvas');
+            canvas.width = bitmap.width;
+            canvas.height = bitmap.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(bitmap, 0, 0);
+            const p = ctx.getImageData(Math.floor(bitmap.width / 2), Math.floor(bitmap.height / 2), 1, 1).data;
+            if (p[0] > 250 && p[1] > 250 && p[2] > 250) {
+              show(TRANSPARENT_TILE);
+              return;
+            }
           }
           const objectUrl = URL.createObjectURL(blob);
           tile._objectUrl = objectUrl;
