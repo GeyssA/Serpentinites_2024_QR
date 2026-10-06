@@ -789,9 +789,7 @@
         flex-direction: row;
         gap: 0;
         padding: 4px 6px calc(4px + env(safe-area-inset-bottom));
-        background: rgba(255, 255, 255, 0.97);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
+        background: #fff;
         border-top: 1px solid var(--border);
         box-shadow: 0 -6px 24px rgba(20, 48, 68, 0.08);
         z-index: 1000;
@@ -828,23 +826,25 @@
         top: auto;
         right: 0;
         left: 0;
-        bottom: 0;
+        bottom: var(--toolbar-h);
         width: auto;
-        max-height: min(74vh, 620px);
+        max-height: min(70vh, 620px);
         border-radius: 18px 18px 0 0;
-        z-index: 1200;
-        padding-bottom: env(safe-area-inset-bottom);
+        z-index: 1001;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        background: #fff;
       }
 
       #legend-panel {
         position: fixed;
         left: 0;
         right: 0;
-        bottom: 0;
+        bottom: var(--toolbar-h);
         top: auto;
         width: auto;
-        max-height: min(74vh, 620px);
-        z-index: 1200;
+        max-height: min(70vh, 620px);
+        z-index: 1001;
       }
 
       .sheet.show {
@@ -863,8 +863,8 @@
       .backdrop {
         position: fixed;
         inset: 0;
-        background: rgba(16, 32, 44, 0.4);
-        z-index: 1100;
+        background: rgba(16, 32, 44, 0.35);
+        z-index: 900;
       }
 
       .backdrop.show {
@@ -977,9 +977,8 @@
           <button type="button" class="sheet-close" data-close="basemap-panel" aria-label="Fermer">×</button>
         </div>
         <div class="sheet-body">
-          <button type="button" class="dropdown-item selected" data-basemap="ign"><span class="check">✓</span>Plan IGN</button>
-          <button type="button" class="dropdown-item" data-basemap="ortho"><span class="check">✓</span>Orthophoto IGN</button>
-          <button type="button" class="dropdown-item" data-basemap="relief"><span class="check">✓</span>Relief</button>
+          <button type="button" class="dropdown-item selected" data-basemap="relief"><span class="check">✓</span>Relief</button>
+          <button type="button" class="dropdown-item" data-basemap="plan"><span class="check">✓</span>Plan</button>
           <button type="button" class="dropdown-item" data-basemap="satellite"><span class="check">✓</span>Satellite</button>
         </div>
       </div>
@@ -1131,103 +1130,23 @@
       }
     };
 
-    // L'IGN répond 200 avec une petite image blanche hors de son emprise.
-    // On ne l'affiche pas : le fond mondial dessous reste visible.
-    const TRANSPARENT_TILE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
-
-    const IgnTileLayer = L.TileLayer.extend({
-      createTile: function (coords, done) {
-        const tile = document.createElement('img');
-        tile.alt = '';
-        const url = this.getTileUrl(coords);
-        const show = (src) => {
-          let settled = false;
-          const finish = () => {
-            if (settled) return;
-            settled = true;
-            done(null, tile);
-          };
-          tile.onload = finish;
-          tile.onerror = finish;
-          tile.src = src;
-          if (tile.complete && tile.naturalWidth) finish();
-        };
-        fetch(url).then((response) => {
-          if (!response.ok) throw new Error('tuile absente');
-          return response.blob();
-        }).then(async (blob) => {
-          // Les dalles vides sont toutes blanches et légères.
-          // Les dalles de mer sont légères aussi, mais bleues : on teste la couleur.
-          if (blob.size < 1500) {
-            const bitmap = await createImageBitmap(blob);
-            const canvas = document.createElement('canvas');
-            canvas.width = bitmap.width;
-            canvas.height = bitmap.height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(bitmap, 0, 0);
-            const p = ctx.getImageData(Math.floor(bitmap.width / 2), Math.floor(bitmap.height / 2), 1, 1).data;
-            if (p[0] > 250 && p[1] > 250 && p[2] > 250) {
-              show(TRANSPARENT_TILE);
-              return;
-            }
-          }
-          const objectUrl = URL.createObjectURL(blob);
-          tile._objectUrl = objectUrl;
-          show(objectUrl);
-        }).catch(() => {
-          show(TRANSPARENT_TILE);
-        });
-        return tile;
-      }
-    });
-
-    function ignOver(ignUrl, underUrl) {
-      const under = L.tileLayer(underUrl, { maxZoom: 19, attribution: '© Esri' });
-      const ign = new IgnTileLayer(ignUrl, {
-        maxZoom: 19,
-        attribution: '© <a href="https://www.ign.fr/">IGN</a>'
-      });
-      ign.on('tileunload', (event) => {
-        if (event.tile._objectUrl) URL.revokeObjectURL(event.tile._objectUrl);
-      });
-      return L.layerGroup([under, ign]);
-    }
-
-    function sendBasemapToBack(layer) {
-      if (layer.eachLayer) {
-        const parts = [];
-        layer.eachLayer((child) => parts.push(child));
-        for (let i = parts.length - 1; i >= 0; i--) {
-          if (parts[i].bringToBack) parts[i].bringToBack();
-        }
-        return;
-      }
-      if (layer.bringToBack) layer.bringToBack();
-    }
-
-    const ESRI_RELIEF = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}';
-    const ESRI_SATELLITE = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-
+    const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/';
     const basemaps = {
-      ign: ignOver(
-        'https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',
-        ESRI_RELIEF
-      ),
-      ortho: ignOver(
-        'https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ORTHOIMAGERY.ORTHOPHOTOS&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',
-        ESRI_SATELLITE
-      ),
-      relief: L.tileLayer(ESRI_RELIEF, {
+      plan: L.tileLayer(ESRI + 'World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
         maxZoom: 19,
         attribution: '© Esri'
       }),
-      satellite: L.tileLayer(ESRI_SATELLITE, {
+      relief: L.tileLayer(ESRI + 'World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19,
+        attribution: '© Esri'
+      }),
+      satellite: L.tileLayer(ESRI + 'World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         maxZoom: 19,
         attribution: '© Esri'
       })
     };
 
-    let currentBasemap = 'ign';
+    let currentBasemap = 'relief';
     let map, dataLayer;
     let serpentinitesLayer = null;
     let amiantiferesLayer = null;
@@ -2308,7 +2227,7 @@
           if (newBasemap !== currentBasemap) {
             map.removeLayer(basemaps[currentBasemap]);
             basemaps[newBasemap].addTo(map);
-            sendBasemapToBack(basemaps[newBasemap]);
+            basemaps[newBasemap].bringToBack();
             currentBasemap = newBasemap;
             basemapPanel.querySelectorAll('.dropdown-item').forEach((i) => i.classList.remove('selected'));
             item.classList.add('selected');
