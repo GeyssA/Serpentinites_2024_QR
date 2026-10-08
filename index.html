@@ -647,19 +647,44 @@
     .leaflet-popup-content-wrapper {
       border-radius: 12px;
       box-shadow: 0 10px 30px var(--shadow);
-      padding: 0;
+      padding: 20px 24px 20px 22px;
     }
 
     .leaflet-popup-content {
       font-family: 'Source Sans 3', sans-serif;
       font-size: 0.9rem;
       line-height: 1.45;
-      margin: 12px 14px;
-      max-width: calc(100vw - 72px);
-      max-height: min(52vh, 380px);
+      margin: 0;
+      max-width: calc(100vw - 104px);
+      max-height: min(calc(100vh - 250px), 520px);
       overflow-y: auto;
       overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
+    }
+
+    .leaflet-container a.leaflet-popup-close-button {
+      top: 10px;
+      right: 10px;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      border-radius: 50%;
+      background: var(--bg);
+      color: var(--primary);
+      font: 22px/27px 'Source Sans 3', sans-serif;
+      font-weight: 400;
+      text-align: center;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .leaflet-container a.leaflet-popup-close-button:hover,
+    .leaflet-container a.leaflet-popup-close-button:focus-visible {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .leaflet-popup-content .popup-title {
+      padding-right: 28px;
     }
 
     .popup-kicker {
@@ -878,6 +903,10 @@
 
       .leaflet-control-zoom {
         margin-top: 8px !important;
+      }
+
+      .popup-open .leaflet-control-zoom {
+        display: none;
       }
 
       .leaflet-control-attribution {
@@ -1195,7 +1224,9 @@
       }).addTo(map);
 
       map.on('zoomend', applyTrailWeights);
+      map.on('popupclose', () => map.getContainer().classList.remove('popup-open'));
       map.on('popupopen', (e) => {
+        map.getContainer().classList.add('popup-open');
         // Deux passes : la taille de la fenêtre se stabilise après le premier rendu.
         requestAnimationFrame(() => {
           fitPopup(e.popup);
