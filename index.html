@@ -655,6 +655,11 @@
       font-size: 0.9rem;
       line-height: 1.45;
       margin: 12px 14px;
+      max-width: calc(100vw - 72px);
+      max-height: min(52vh, 380px);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
     }
 
     .popup-kicker {
@@ -1169,6 +1174,9 @@
       document.getElementById('loading-screen').classList.add('hidden');
     }
 
+    // Le recadrage automatique de Leaflet ignore nos panneaux : on utilise fitPopup().
+    L.Popup.prototype.options.autoPan = false;
+
     // === INITIALIZE MAP ===
     function initMap() {
       updateLoading(20, 'Initialisation de la carte...');
@@ -1187,6 +1195,13 @@
       }).addTo(map);
 
       map.on('zoomend', applyTrailWeights);
+      map.on('popupopen', (e) => {
+        // Deux passes : la taille de la fenêtre se stabilise après le premier rendu.
+        requestAnimationFrame(() => {
+          fitPopup(e.popup);
+          setTimeout(() => fitPopup(e.popup), 260);
+        });
+      });
 
       updateLoading(40, 'Chargement des données...');
       loadGeoJSON();
@@ -1199,6 +1214,42 @@
 
     function isMobile() {
       return window.matchMedia('(max-width: 768px)').matches;
+    }
+
+    // Recadre la carte pour que la fenêtre de détail reste entièrement visible,
+    // hors de l'en-tête, de la légende, des outils et de la barre du bas.
+    function fitPopup(popup) {
+      if (!map || !popup || !map.hasLayer(popup)) return;
+      const el = popup.getElement();
+      if (!el) return;
+      const box = el.getBoundingClientRect();
+      const mapBox = map.getContainer().getBoundingClientRect();
+      const gap = 14;
+      let left = mapBox.left + gap;
+      let right = mapBox.right - gap;
+      let top = mapBox.top + gap;
+      let bottom = mapBox.bottom - gap;
+
+      if (!isMobile()) {
+        const legend = document.getElementById('legend-panel');
+        if (legend.classList.contains('show')) left = Math.max(left, legend.getBoundingClientRect().right + gap);
+        const tools = document.querySelector('.toolbar').getBoundingClientRect();
+        right = Math.min(right, tools.left - gap);
+        const zoom = document.querySelector('.leaflet-control-zoom');
+        if (zoom) top = Math.max(top, zoom.getBoundingClientRect().top - 4);
+      }
+
+      let dx = 0;
+      let dy = 0;
+      if (box.top < top) dy = box.top - top;
+      else if (box.bottom > bottom) dy = box.bottom - bottom;
+      if (box.left < left) dx = box.left - left;
+      else if (box.right > right) dx = box.right - right;
+      // Fenêtre plus haute que la zone libre : on aligne son haut.
+      if (box.height > bottom - top) dy = box.top - top;
+      if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+        map.panBy([dx, dy], { animate: true, duration: 0.25 });
+      }
     }
 
     function syncChrome() {
